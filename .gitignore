@@ -213,3 +213,5 @@ FakesAssemblies/
 .venv/
 .env
 appsettings.Development.json
+
+coverage/
