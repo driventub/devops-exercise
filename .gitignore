@@ -210,3 +210,6 @@ FakesAssemblies/
 *.sln.iml
 
 .devcontainer
+.venv/
+.env
+appsettings.Development.json
