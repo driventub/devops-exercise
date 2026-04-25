@@ -1,19 +1,26 @@
 using DevOpsService.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DevOpsService.Api.Controllers;
-
-[ApiController]
-public class DevOpsController : ControllerBase
+namespace DevOpsService.Api.Controller
 {
-    [HttpPost("/DevOps")]
-    public IActionResult Post([FromBody] Request request)
+    [ApiController]
+    public sealed class DevOpsController : ControllerBase
     {
-        var response = new DevOpsResponse
+        [HttpPost("/DevOps")]
+        public IActionResult Post([FromBody] Request request)
         {
-            Message = $"Hello {request.To} your message will be sent"
-        };
+            if (request == null)
+            {
+                return BadRequest("Request cannot be null");
+            }
 
-        return Ok(response);
+            DevOpsResponse response = new()
+            {
+                Message = $"Hello {request.To} your message will be sent"
+            };
+
+            return Ok(response);
+        }
     }
 }
+

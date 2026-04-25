@@ -1,6 +1,7 @@
-namespace DevOpsService.Api.Models;
-
-public class DevOpsResponse
+namespace DevOpsService.Api.Models
 {
-    public string Message { get; set; } = string.Empty;
+    public class DevOpsResponse
+    {
+        public string Message { get; set; } = string.Empty;
+    }
 }

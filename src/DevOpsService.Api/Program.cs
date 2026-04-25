@@ -1,14 +1,14 @@
 using DotNetEnv;
 using DevOpsService.Api.Middleware;
-using DevOpsService.Api.Services;
+using DevOpsService.Api.Service;
 
 Env.Load();
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 app.UseMiddleware<ApiKeyMiddleware>();
 app.MapControllers();

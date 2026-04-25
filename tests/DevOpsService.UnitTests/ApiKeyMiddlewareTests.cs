@@ -1,150 +1,154 @@
 using DevOpsService.Api.Middleware;
-using DevOpsService.Api.Services;
+using DevOpsService.Api.Service;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Moq;
 
-namespace DevOpsService.UnitTests.Middleware;
-
-public class ApiKeyMiddlewareTests
+namespace DevOpsService.UnitTests
 {
-    private const string ValidApiKey = "2f5ae96c-b558-4c7b-a590-a501ae1c3f6c";
-
-    private static ApiKeyMiddleware CreateMiddleware(RequestDelegate next)
+    public class ApiKeyMiddlewareTests
     {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                { "ApiKey", ValidApiKey }
-            })
-            .Build();
+        private const string ValidApiKey = "2f5ae96c-b558-4c7b-a590-a501ae1c3f6c";
 
-        return new ApiKeyMiddleware(next, config);
-    }
-
-    private static DefaultHttpContext CreateContext(
-        string method = "POST",
-        string? apiKey = ValidApiKey,
-        string? jwt = "some-jwt")
-    {
-        var context = new DefaultHttpContext();
-        context.Request.Method = method;
-        context.Response.Body = new MemoryStream();
-
-        if (apiKey is not null)
-            context.Request.Headers["X-Parse-REST-API-Key"] = apiKey;
-
-        if (jwt is not null)
-            context.Request.Headers["X-JWT-KWY"] = jwt;
-
-        return context;
-    }
-
-    [Fact]
-    public async Task InvokeAsync_ValidRequest_CallsNext()
-    {
-        // Arrange
-        var nextCalled = false;
-        var middleware = CreateMiddleware(_ =>
+        private static ApiKeyMiddleware CreateMiddleware(RequestDelegate next)
         {
-            nextCalled = true;
-            return Task.CompletedTask;
-        });
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "ApiKey", ValidApiKey }
+                })
+                .Build();
 
-        var context = CreateContext();
-        var jwtService = new JwtService();
+            return new ApiKeyMiddleware(next, config);
+        }
 
-        // Act
-        await middleware.InvokeAsync(context, jwtService);
+        private static DefaultHttpContext CreateContext(
+            string method = "POST",
+            string? apiKey = ValidApiKey,
+            string? jwt = "some-jwt")
+        {
+            DefaultHttpContext context = new DefaultHttpContext();
+            context.Request.Method = method;
+            context.Response.Body = new MemoryStream();
 
-        // Assert
-        nextCalled.Should().BeTrue();
-    }
+            if (apiKey is not null)
+            {
+                context.Request.Headers["X-Parse-REST-API-Key"] = apiKey;
+            }
 
-    [Theory]
-    [InlineData("GET")]
-    [InlineData("PUT")]
-    [InlineData("DELETE")]
-    [InlineData("PATCH")]
-    public async Task InvokeAsync_NonPostMethod_Returns405AndErrorMessage(string method)
-    {
-        // Arrange
-        var middleware = CreateMiddleware(_ => Task.CompletedTask);
-        var context = CreateContext(method: method);
-        var jwtService = new JwtService();
+            if (jwt is not null)
+            {
+                context.Request.Headers["X-JWT-KWY"] = jwt;
+            }
 
-        // Act
-        await middleware.InvokeAsync(context, jwtService);
+            return context;
+        }
 
-        // Assert
-        context.Response.StatusCode.Should().Be(405);
-        context.Response.Body.Seek(0, SeekOrigin.Begin);
-        var body = await new StreamReader(context.Response.Body).ReadToEndAsync();
-        body.Should().Be("ERROR");
-    }
+        [Fact]
+        public async Task InvokeAsyncValidRequestCallsNext()
+        {
+            // Arrange
+            var nextCalled = false;
+            var middleware = CreateMiddleware(_ =>
+            {
+                nextCalled = true;
+                return Task.CompletedTask;
+            });
 
-    [Fact]
-    public async Task InvokeAsync_MissingApiKey_Returns401()
-    {
-        // Arrange
-        var middleware = CreateMiddleware(_ => Task.CompletedTask);
-        var context = CreateContext(apiKey: null);
-        var jwtService = new JwtService();
+            var context = CreateContext();
+            JwtService jwtService = new JwtService();
 
-        // Act
-        await middleware.InvokeAsync(context, jwtService);
+            // Act
+            await middleware.InvokeAsync(context, jwtService);
 
-        // Assert
-        context.Response.StatusCode.Should().Be(401);
-    }
+            // Assert
+            _ = nextCalled.Should().BeTrue();
+        }
 
-    [Fact]
-    public async Task InvokeAsync_WrongApiKey_Returns401()
-    {
-        // Arrange
-        var middleware = CreateMiddleware(_ => Task.CompletedTask);
-        var context = CreateContext(apiKey: "wrong-key");
-        var jwtService = new JwtService();
+        [Theory]
+        [InlineData("GET")]
+        [InlineData("PUT")]
+        [InlineData("DELETE")]
+        [InlineData("PATCH")]
+        public async Task InvokeAsyncNonPostMethodReturns405AndErrorMessage(string method)
+        {
+            // Arrange
+            var middleware = CreateMiddleware(_ => Task.CompletedTask);
+            var context = CreateContext(method: method);
+            JwtService jwtService = new JwtService();
 
-        // Act
-        await middleware.InvokeAsync(context, jwtService);
+            // Act
+            await middleware.InvokeAsync(context, jwtService);
 
-        // Assert
-        context.Response.StatusCode.Should().Be(401);
-    }
+            // Assert
+            _ = context.Response.StatusCode.Should().Be(405);
+            _ = context.Response.Body.Seek(0, SeekOrigin.Begin);
+            var body = await new StreamReader(context.Response.Body).ReadToEndAsync();
+            _ = body.Should().Be("ERROR");
+        }
 
-    [Fact]
-    public async Task InvokeAsync_MissingJwt_Returns401()
-    {
-        // Arrange
-        var middleware = CreateMiddleware(_ => Task.CompletedTask);
-        var context = CreateContext(jwt: null);
-        var jwtService = new JwtService();
+        [Fact]
+        public async Task InvokeAsyncMissingApiKeyReturns401()
+        {
+            // Arrange
+            var middleware = CreateMiddleware(_ => Task.CompletedTask);
+            var context = CreateContext(apiKey: null);
+            JwtService jwtService = new JwtService();
 
-        // Act
-        await middleware.InvokeAsync(context, jwtService);
+            // Act
+            await middleware.InvokeAsync(context, jwtService);
 
-        // Assert
-        context.Response.StatusCode.Should().Be(401);
-    }
+            // Assert
+            _ = context.Response.StatusCode.Should().Be(401);
+        }
 
-    [Fact]
-    public async Task InvokeAsync_DuplicateJwt_Returns401OnSecondCall()
-    {
-        // Arrange
-        var middleware = CreateMiddleware(_ => Task.CompletedTask);
-        var jwtService = new JwtService();
-        var jwt = "unique-jwt-token";
+        [Fact]
+        public async Task InvokeAsyncWrongApiKeyReturns401()
+        {
+            // Arrange
+            var middleware = CreateMiddleware(_ => Task.CompletedTask);
+            var context = CreateContext(apiKey: "wrong-key");
+            JwtService jwtService = new JwtService();
 
-        var firstContext = CreateContext(jwt: jwt);
-        var secondContext = CreateContext(jwt: jwt);
+            // Act
+            await middleware.InvokeAsync(context, jwtService);
 
-        // Act
-        await middleware.InvokeAsync(firstContext, jwtService);
-        await middleware.InvokeAsync(secondContext, jwtService);
+            // Assert
+            _ = context.Response.StatusCode.Should().Be(401);
+        }
 
-        // Assert
-        secondContext.Response.StatusCode.Should().Be(401);
+        [Fact]
+        public async Task InvokeAsyncMissingJwtReturns401()
+        {
+            // Arrange
+            var middleware = CreateMiddleware(_ => Task.CompletedTask);
+            var context = CreateContext(jwt: null);
+            JwtService jwtService = new JwtService();
+
+            // Act
+            await middleware.InvokeAsync(context, jwtService);
+
+            // Assert
+            _ = context.Response.StatusCode.Should().Be(401);
+        }
+
+        [Fact]
+        public async Task InvokeAsyncDuplicateJwtReturns401OnSecondCall()
+        {
+            // Arrange
+            var middleware = CreateMiddleware(_ => Task.CompletedTask);
+            JwtService jwtService = new JwtService();
+            var jwt = "unique-jwt-token";
+
+            var firstContext = CreateContext(jwt: jwt);
+            var secondContext = CreateContext(jwt: jwt);
+
+            // Act
+            await middleware.InvokeAsync(firstContext, jwtService);
+            await middleware.InvokeAsync(secondContext, jwtService);
+
+            // Assert
+            _ = secondContext.Response.StatusCode.Should().Be(401);
+        }
     }
 }

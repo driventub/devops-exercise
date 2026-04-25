@@ -1,14 +1,20 @@
 using System.Collections.Concurrent;
 
-namespace DevOpsService.Api.Services;
-
-public class JwtService : IJwtService
+namespace DevOpsService.Api.Service
 {
-    private readonly ConcurrentDictionary<string, bool> _usedTokens = new();
+    public class JwtService : IJwtService
+    {
+        private readonly ConcurrentDictionary<string, bool> _usedTokens = new();
 
-    public bool IsJwtUnique(string jwt) =>
-        !_usedTokens.ContainsKey(jwt);
+        public bool IsJwtUnique(string jwt)
+        {
+            return !_usedTokens.ContainsKey(jwt);
+        }
 
-    public void MarkJwtAsUsed(string jwt) =>
-        _usedTokens.TryAdd(jwt, true);
+        public void MarkJwtAsUsed(string jwt)
+        {
+            _ = _usedTokens.TryAdd(jwt, true);
+        }
+    }
 }
+

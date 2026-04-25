@@ -1,57 +1,58 @@
-using DevOpsService.Api.Services;
+using DevOpsService.Api.Service;
 using FluentAssertions;
 
-namespace DevOpsService.UnitTests.Services;
-
-public class JwtServiceTests
+namespace DevOpsService.UnitTests
 {
-    [Fact]
-    public void IsJwtUnique_NewToken_ReturnsTrue()
+    public class JwtServiceTests
     {
-        // Arrange
-        var service = new JwtService();
+        [Fact]
+        public void IsJwtUniqueNewTokenReturnsTrue()
+        {
+            // Arrange
+            JwtService service = new JwtService();
 
-        // Act
-        var result = service.IsJwtUnique("brand-new-token");
+            // Act
+            var result = service.IsJwtUnique("brand-new-token");
 
-        // Assert
-        result.Should().BeTrue();
-    }
+            // Assert
+            _ = result.Should().BeTrue();
+        }
 
-    [Fact]
-    public void IsJwtUnique_AfterMarkingAsUsed_ReturnsFalse()
-    {
-        // Arrange
-        var service = new JwtService();
-        service.MarkJwtAsUsed("used-token");
+        [Fact]
+        public void IsJwtUniqueAfterMarkingAsUsedReturnsFalse()
+        {
+            // Arrange
+            JwtService service = new JwtService();
+            service.MarkJwtAsUsed("used-token");
 
-        // Act
-        var result = service.IsJwtUnique("used-token");
+            // Act
+            var result = service.IsJwtUnique("used-token");
 
-        // Assert
-        result.Should().BeFalse();
-    }
+            // Assert
+            _ = result.Should().BeFalse();
+        }
 
-    [Fact]
-    public void MarkJwtAsUsed_DifferentTokens_EachTrackedIndependently()
-    {
-        // Arrange
-        var service = new JwtService();
-        service.MarkJwtAsUsed("token-one");
+        [Fact]
+        public void MarkJwtAsUsedDifferentTokensEachTrackedIndependently()
+        {
+            // Arrange
+            JwtService service = new JwtService();
+            service.MarkJwtAsUsed("token-one");
 
-        // Act & Assert
-        service.IsJwtUnique("token-one").Should().BeFalse();
-        service.IsJwtUnique("token-two").Should().BeTrue();
-    }
+            // Act & Assert
+            _ = service.IsJwtUnique("token-one").Should().BeFalse();
+            _ = service.IsJwtUnique("token-two").Should().BeTrue();
+        }
 
-    [Fact]
-    public void IsJwtUnique_EmptyService_AlwaysReturnsTrue()
-    {
-        // Arrange
-        var service = new JwtService();
+        [Fact]
+        public void IsJwtUniqueEmptyServiceAlwaysReturnsTrue()
+        {
+            // Arrange
+            JwtService service = new JwtService();
 
-        // Act & Assert
-        service.IsJwtUnique("any-token").Should().BeTrue();
-        service.IsJwtUnique("another-token").Should().BeTrue();
+            // Act & Assert
+            _ = service.IsJwtUnique("any-token").Should().BeTrue();
+            _ = service.IsJwtUnique("another-token").Should().BeTrue();
+        }
     }
 }
