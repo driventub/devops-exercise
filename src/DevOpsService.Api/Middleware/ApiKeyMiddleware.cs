@@ -11,6 +11,12 @@ namespace DevOpsService.Api.Middleware
 
         public async Task InvokeAsync(HttpContext context, Service.IJwtService jwtService)
         {
+            // ApiKeyMiddleware.cs — add at the top of InvokeAsync
+            if (context.Request.Path.StartsWithSegments("/health"))
+            {
+                await _next(context).ConfigureAwait(false);
+                return;
+            }
 
             if (context.Request.Method != HttpMethods.Post)
             {

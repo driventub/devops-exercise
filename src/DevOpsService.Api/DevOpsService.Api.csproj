@@ -12,9 +12,4 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="DotNetEnv" Version="3.1.1" />
-  </ItemGroup>
-
 </Project>

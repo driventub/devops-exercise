@@ -1,8 +1,6 @@
-using DotNetEnv;
 using DevOpsService.Api.Middleware;
 using DevOpsService.Api.Service;
 
-Env.Load();
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
