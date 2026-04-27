@@ -16,3 +16,7 @@ dotnet_naming_style.camel_case_style.required_prefix = _
 
 # Suppress CA1515 because internal classes breaks the proper public classes 
 dotnet_diagnostic.CA1515.severity = none
+
+# Supress IDE0058 to analyze self-contained assertions
+[tests/**/*.cs]
+dotnet_diagnostic.IDE0058.severity = none

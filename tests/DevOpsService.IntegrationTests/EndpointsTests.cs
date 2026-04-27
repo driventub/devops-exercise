@@ -4,13 +4,23 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace DevOpsService.IntegrationTests
 {
     public class EndpointTest(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
     {
-        private readonly HttpClient _client = factory.CreateClient();
+        private readonly HttpClient _client = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "ApiKey", _apiKey }
+                });
+            });
+        }).CreateClient();
+
+
         private const string _apiKey = "test-api-key";
 
         private static StringContent BuildBody()
@@ -32,10 +42,8 @@ namespace DevOpsService.IntegrationTests
         [Fact]
         public async Task PostWithValidRequestReturns200AndExpectedMessage()
         {
-            IConfiguration config = factory.Services.GetRequiredService<IConfiguration>();
-            string? apiKey = config["ApiKey"];
             HttpRequestMessage request = new(HttpMethod.Post, "/DevOps");
-            request.Headers.Add("X-Parse-REST-API-Key", apiKey);
+            request.Headers.Add("X-Parse-REST-API-Key", _apiKey); // ← no more config lookup
             request.Headers.Add("X-JWT-KWY", GenerateJwt());
             request.Content = BuildBody();
 
