@@ -215,3 +215,8 @@ FakesAssemblies/
 appsettings.Development.json
 
 coverage/
+
+
+# For Terraform
+
+*.tfvars
