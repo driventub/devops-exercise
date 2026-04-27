@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace DevOpsService.Api.Controller
 {
     [ApiController]
-    public sealed class HealthController : ControllerBase
+    internal sealed class HealthController : ControllerBase
     {
         [HttpGet("/health")]
-        public IActionResult Get() => Ok(new { status = "healthy" });
+        public IActionResult Get()
+        {
+            return Ok(new { status = "healthy" });
+        }
     }
 }

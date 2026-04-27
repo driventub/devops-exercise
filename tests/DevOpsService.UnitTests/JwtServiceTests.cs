@@ -9,10 +9,10 @@ namespace DevOpsService.UnitTests
         public void IsJwtUniqueNewTokenReturnsTrue()
         {
             // Arrange
-            JwtService service = new JwtService();
+            JwtService service = new();
 
             // Act
-            var result = service.IsJwtUnique("brand-new-token");
+            bool result = service.IsJwtUnique("brand-new-token");
 
             // Assert
             _ = result.Should().BeTrue();
@@ -22,11 +22,11 @@ namespace DevOpsService.UnitTests
         public void IsJwtUniqueAfterMarkingAsUsedReturnsFalse()
         {
             // Arrange
-            JwtService service = new JwtService();
+            JwtService service = new();
             service.MarkJwtAsUsed("used-token");
 
             // Act
-            var result = service.IsJwtUnique("used-token");
+            bool result = service.IsJwtUnique("used-token");
 
             // Assert
             _ = result.Should().BeFalse();
@@ -36,7 +36,7 @@ namespace DevOpsService.UnitTests
         public void MarkJwtAsUsedDifferentTokensEachTrackedIndependently()
         {
             // Arrange
-            JwtService service = new JwtService();
+            JwtService service = new();
             service.MarkJwtAsUsed("token-one");
 
             // Act & Assert
@@ -48,7 +48,7 @@ namespace DevOpsService.UnitTests
         public void IsJwtUniqueEmptyServiceAlwaysReturnsTrue()
         {
             // Arrange
-            JwtService service = new JwtService();
+            JwtService service = new();
 
             // Act & Assert
             _ = service.IsJwtUnique("any-token").Should().BeTrue();

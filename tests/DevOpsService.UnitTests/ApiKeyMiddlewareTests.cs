@@ -8,14 +8,14 @@ namespace DevOpsService.UnitTests
 {
     public class ApiKeyMiddlewareTests
     {
-        private const string ValidApiKey = "2f5ae96c-b558-4c7b-a590-a501ae1c3f6c";
+        private const string _validApiKey = "2f5ae96c-b558-4c7b-a590-a501ae1c3f6c";
 
         private static ApiKeyMiddleware CreateMiddleware(RequestDelegate next)
         {
-            var config = new ConfigurationBuilder()
+            IConfigurationRoot config = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    { "ApiKey", ValidApiKey }
+                    { "ApiKey", _validApiKey }
                 })
                 .Build();
 
@@ -24,10 +24,10 @@ namespace DevOpsService.UnitTests
 
         private static DefaultHttpContext CreateContext(
             string method = "POST",
-            string? apiKey = ValidApiKey,
+            string? apiKey = _validApiKey,
             string? jwt = "some-jwt")
         {
-            DefaultHttpContext context = new DefaultHttpContext();
+            DefaultHttpContext context = new();
             context.Request.Method = method;
             context.Response.Body = new MemoryStream();
 
@@ -48,15 +48,15 @@ namespace DevOpsService.UnitTests
         public async Task InvokeAsyncValidRequestCallsNext()
         {
             // Arrange
-            var nextCalled = false;
-            var middleware = CreateMiddleware(_ =>
+            bool nextCalled = false;
+            ApiKeyMiddleware middleware = CreateMiddleware(_ =>
             {
                 nextCalled = true;
                 return Task.CompletedTask;
             });
 
-            var context = CreateContext();
-            JwtService jwtService = new JwtService();
+            DefaultHttpContext context = CreateContext();
+            JwtService jwtService = new();
 
             // Act
             await middleware.InvokeAsync(context, jwtService);
@@ -73,9 +73,9 @@ namespace DevOpsService.UnitTests
         public async Task InvokeAsyncNonPostMethodReturns405AndErrorMessage(string method)
         {
             // Arrange
-            var middleware = CreateMiddleware(_ => Task.CompletedTask);
-            var context = CreateContext(method: method);
-            JwtService jwtService = new JwtService();
+            ApiKeyMiddleware middleware = CreateMiddleware(_ => Task.CompletedTask);
+            DefaultHttpContext context = CreateContext(method: method);
+            JwtService jwtService = new();
 
             // Act
             await middleware.InvokeAsync(context, jwtService);
@@ -83,7 +83,7 @@ namespace DevOpsService.UnitTests
             // Assert
             _ = context.Response.StatusCode.Should().Be(405);
             _ = context.Response.Body.Seek(0, SeekOrigin.Begin);
-            var body = await new StreamReader(context.Response.Body).ReadToEndAsync();
+            string body = await new StreamReader(context.Response.Body).ReadToEndAsync();
             _ = body.Should().Be("ERROR");
         }
 
@@ -91,9 +91,9 @@ namespace DevOpsService.UnitTests
         public async Task InvokeAsyncMissingApiKeyReturns401()
         {
             // Arrange
-            var middleware = CreateMiddleware(_ => Task.CompletedTask);
-            var context = CreateContext(apiKey: null);
-            JwtService jwtService = new JwtService();
+            ApiKeyMiddleware middleware = CreateMiddleware(_ => Task.CompletedTask);
+            DefaultHttpContext context = CreateContext(apiKey: null);
+            JwtService jwtService = new();
 
             // Act
             await middleware.InvokeAsync(context, jwtService);
@@ -106,9 +106,9 @@ namespace DevOpsService.UnitTests
         public async Task InvokeAsyncWrongApiKeyReturns401()
         {
             // Arrange
-            var middleware = CreateMiddleware(_ => Task.CompletedTask);
-            var context = CreateContext(apiKey: "wrong-key");
-            JwtService jwtService = new JwtService();
+            ApiKeyMiddleware middleware = CreateMiddleware(_ => Task.CompletedTask);
+            DefaultHttpContext context = CreateContext(apiKey: "wrong-key");
+            JwtService jwtService = new();
 
             // Act
             await middleware.InvokeAsync(context, jwtService);
@@ -121,9 +121,9 @@ namespace DevOpsService.UnitTests
         public async Task InvokeAsyncMissingJwtReturns401()
         {
             // Arrange
-            var middleware = CreateMiddleware(_ => Task.CompletedTask);
-            var context = CreateContext(jwt: null);
-            JwtService jwtService = new JwtService();
+            ApiKeyMiddleware middleware = CreateMiddleware(_ => Task.CompletedTask);
+            DefaultHttpContext context = CreateContext(jwt: null);
+            JwtService jwtService = new();
 
             // Act
             await middleware.InvokeAsync(context, jwtService);
@@ -136,12 +136,12 @@ namespace DevOpsService.UnitTests
         public async Task InvokeAsyncDuplicateJwtReturns401OnSecondCall()
         {
             // Arrange
-            var middleware = CreateMiddleware(_ => Task.CompletedTask);
-            JwtService jwtService = new JwtService();
-            var jwt = "unique-jwt-token";
+            ApiKeyMiddleware middleware = CreateMiddleware(_ => Task.CompletedTask);
+            JwtService jwtService = new();
+            string jwt = "unique-jwt-token";
 
-            var firstContext = CreateContext(jwt: jwt);
-            var secondContext = CreateContext(jwt: jwt);
+            DefaultHttpContext firstContext = CreateContext(jwt: jwt);
+            DefaultHttpContext secondContext = CreateContext(jwt: jwt);
 
             // Act
             await middleware.InvokeAsync(firstContext, jwtService);

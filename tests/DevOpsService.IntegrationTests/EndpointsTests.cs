@@ -11,7 +11,7 @@ namespace DevOpsService.IntegrationTests
     public class EndpointTest(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly HttpClient _client = factory.CreateClient();
-        private const string ApiKey = "test-api-key";
+        private const string _apiKey = "test-api-key";
 
         private static StringContent BuildBody()
         {
@@ -32,15 +32,15 @@ namespace DevOpsService.IntegrationTests
         [Fact]
         public async Task PostWithValidRequestReturns200AndExpectedMessage()
         {
-            var config = factory.Services.GetRequiredService<IConfiguration>();
-            var apiKey = config["ApiKey"];
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "/DevOps");
+            IConfiguration config = factory.Services.GetRequiredService<IConfiguration>();
+            string? apiKey = config["ApiKey"];
+            HttpRequestMessage request = new(HttpMethod.Post, "/DevOps");
             request.Headers.Add("X-Parse-REST-API-Key", apiKey);
             request.Headers.Add("X-JWT-KWY", GenerateJwt());
             request.Content = BuildBody();
 
-            var response = await _client.SendAsync(request);
-            var body = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await _client.SendAsync(request);
+            string body = await response.Content.ReadAsStringAsync();
 
             _ = response.StatusCode.Should().Be(HttpStatusCode.OK);
             _ = body.Should().Contain("Hello Juan Perez your message will be sent");
@@ -53,12 +53,12 @@ namespace DevOpsService.IntegrationTests
         [InlineData("PATCH")]
         public async Task NonPostReturns405WithErrorMessage(string method)
         {
-            HttpRequestMessage request = new HttpRequestMessage(new HttpMethod(method), "/DevOps");
-            request.Headers.Add("X-Parse-REST-API-Key", ApiKey);
+            HttpRequestMessage request = new(new HttpMethod(method), "/DevOps");
+            request.Headers.Add("X-Parse-REST-API-Key", _apiKey);
             request.Headers.Add("X-JWT-KWY", GenerateJwt());
 
-            var response = await _client.SendAsync(request);
-            var body = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await _client.SendAsync(request);
+            string body = await response.Content.ReadAsStringAsync();
 
             _ = body.Should().Be("ERROR");
         }
@@ -67,11 +67,11 @@ namespace DevOpsService.IntegrationTests
         [Fact]
         public async Task PostWithoutApiKeyReturns401()
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "/DevOps");
+            HttpRequestMessage request = new(HttpMethod.Post, "/DevOps");
             request.Headers.Add("X-JWT-KWY", GenerateJwt());
             request.Content = BuildBody();
 
-            var response = await _client.SendAsync(request);
+            HttpResponseMessage response = await _client.SendAsync(request);
 
             _ = response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
@@ -80,12 +80,12 @@ namespace DevOpsService.IntegrationTests
         [Fact]
         public async Task PostWithWrongApiKeyReturns401()
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "/DevOps");
+            HttpRequestMessage request = new(HttpMethod.Post, "/DevOps");
             request.Headers.Add("X-Parse-REST-API-Key", "wrong-key");
             request.Headers.Add("X-JWT-KWY", GenerateJwt());
             request.Content = BuildBody();
 
-            var response = await _client.SendAsync(request);
+            HttpResponseMessage response = await _client.SendAsync(request);
 
             _ = response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
@@ -94,11 +94,11 @@ namespace DevOpsService.IntegrationTests
         [Fact]
         public async Task PostWithoutJwtReturns401()
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "/DevOps");
-            request.Headers.Add("X-Parse-REST-API-Key", ApiKey);
+            HttpRequestMessage request = new(HttpMethod.Post, "/DevOps");
+            request.Headers.Add("X-Parse-REST-API-Key", _apiKey);
             request.Content = BuildBody();
 
-            var response = await _client.SendAsync(request);
+            HttpResponseMessage response = await _client.SendAsync(request);
 
             _ = response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
@@ -107,20 +107,20 @@ namespace DevOpsService.IntegrationTests
         [Fact]
         public async Task PostWithDuplicateJwtReturns401OnSecondCall()
         {
-            var jwt = GenerateJwt();
+            string jwt = GenerateJwt();
 
-            HttpRequestMessage first = new HttpRequestMessage(HttpMethod.Post, "/DevOps");
-            first.Headers.Add("X-Parse-REST-API-Key", ApiKey);
+            HttpRequestMessage first = new(HttpMethod.Post, "/DevOps");
+            first.Headers.Add("X-Parse-REST-API-Key", _apiKey);
             first.Headers.Add("X-JWT-KWY", jwt);
             first.Content = BuildBody();
 
-            HttpRequestMessage second = new HttpRequestMessage(HttpMethod.Post, "/DevOps");
-            second.Headers.Add("X-Parse-REST-API-Key", ApiKey);
+            HttpRequestMessage second = new(HttpMethod.Post, "/DevOps");
+            second.Headers.Add("X-Parse-REST-API-Key", _apiKey);
             second.Headers.Add("X-JWT-KWY", jwt);
             second.Content = BuildBody();
 
             _ = await _client.SendAsync(first);
-            var response = await _client.SendAsync(second);
+            HttpResponseMessage response = await _client.SendAsync(second);
 
             _ = response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }

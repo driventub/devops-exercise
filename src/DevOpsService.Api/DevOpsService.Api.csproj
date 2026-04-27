@@ -12,4 +12,9 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DevOpsService.UnitTests" />
+    <InternalsVisibleTo Include="DevOpsService.IntegrationTests" />
+  </ItemGroup>
 </Project>

@@ -13,3 +13,6 @@ dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 
 dotnet_naming_style.camel_case_style.capitalization = camel_case
 dotnet_naming_style.camel_case_style.required_prefix = _
+
+# Suppress CA1515 because internal classes breaks the proper public classes 
+dotnet_diagnostic.CA1515.severity = none

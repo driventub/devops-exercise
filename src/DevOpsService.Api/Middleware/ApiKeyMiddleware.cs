@@ -2,17 +2,19 @@ using Microsoft.Extensions.Primitives;
 
 namespace DevOpsService.Api.Middleware
 {
-    public class ApiKeyMiddleware(RequestDelegate next, IConfiguration configuration)
+    internal class ApiKeyMiddleware(RequestDelegate next, IConfiguration configuration)
     {
         private readonly RequestDelegate _next = next;
-        private const string ApiKeyHeader = "X-Parse-REST-API-Key";
-        private const string JwtHeader = "X-JWT-KWY";
+        private const string _apiKeyHeader = "X-Parse-REST-API-Key";
+        private const string _jwtHeader = "X-JWT-KWY";
         private readonly string _apiKey = configuration["ApiKey"] ?? string.Empty;
 
         public async Task InvokeAsync(HttpContext context, Service.IJwtService jwtService)
         {
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(jwtService);
             // ApiKeyMiddleware.cs — add at the top of InvokeAsync
-            if (context.Request.Path.StartsWithSegments("/health"))
+            if (context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase))
             {
                 await _next(context).ConfigureAwait(false);
                 return;
@@ -26,7 +28,7 @@ namespace DevOpsService.Api.Middleware
             }
 
 
-            if (!context.Request.Headers.TryGetValue(ApiKeyHeader, out StringValues apiKey)
+            if (!context.Request.Headers.TryGetValue(_apiKeyHeader, out StringValues apiKey)
                 || apiKey != _apiKey)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -34,7 +36,7 @@ namespace DevOpsService.Api.Middleware
             }
 
 
-            if (!context.Request.Headers.TryGetValue(JwtHeader, out StringValues jwt)
+            if (!context.Request.Headers.TryGetValue(_jwtHeader, out StringValues jwt)
                 || string.IsNullOrWhiteSpace(jwt))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
